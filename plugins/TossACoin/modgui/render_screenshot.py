@@ -15,6 +15,12 @@ WIDTH/HEIGHT to your pedal size).
 Needs Google Chrome (the same one `make manual` uses; override with CHROME=...)
 and Pillow for the thumbnail:
     python3 render_screenshot.py
+
+Preview it the way MOD-UI will style it: point MODUI_CSS at MOD-UI's css/
+directory (e.g. from a MOD Desktop install) and its main.css + pedals.css are
+loaded AFTER ours, so any rule of theirs that wins shows up (they force a
+font on every element, and style the footswitch and light):
+    MODUI_CSS=~/Software/mod-desktop-*/mod-desktop/html/css python3 render_screenshot.py
 """
 
 import os
@@ -104,6 +110,9 @@ def main():
         pedal_html = pedal_html.replace(f'mod-port-symbol="{port}"',
                                         f'mod-port-symbol="{port}" style="background-position: -{frame * 54}px 0"')
 
+    modui = "".join(f'<link rel="stylesheet" href="file://{os.environ["MODUI_CSS"]}/{f}">'
+                    for f in ("main.css", "pedals.css")) if os.environ.get("MODUI_CSS") else ""
+
     page = f"""<!doctype html>
 <html><head>
 <meta charset="utf-8">
@@ -117,7 +126,7 @@ def main():
   .pedal-host {{ position: relative; width: {WIDTH}px; height: {HEIGHT}px; }}
   .tossacoin-pedal {{ box-shadow: none; }}
 {css}
-</style></head>
+</style>{modui}</head>
 <body><div class="pedal-host">{pedal_html}</div></body></html>"""
 
     with tempfile.TemporaryDirectory(prefix="tossacoin-render-") as tmp:
