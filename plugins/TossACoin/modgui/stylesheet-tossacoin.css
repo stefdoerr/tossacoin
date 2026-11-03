@@ -1,156 +1,272 @@
 /*
- * TossACoin — MOD pedal stylesheet.
+ * Toss a Coin — MOD pedal stylesheet (640 x 300).
  *
- * Deliberately minimal: only positions our own controls and the audio
- * jacks. The pedal frame texture, brand/label fonts, bypass light and
- * footswitch visuals are all left to MOD-UI's built-in skin (selected
- * by `modgui:model` / `modgui:panel` / `modgui:color` / `modgui:knob`
- * in modgui.ttl). If you want a custom look, add `background:`,
- * `box-shadow:`, custom `.mod-plugin-brand h1 { ... }` etc. here.
+ * Art (all public domain / CC0, see img/CREDITS.md): two 17th-century silk
+ * damasks recoloured navy-teal and magenta, gold staters as knobs, a silver
+ * tetradrachm as the footswitch, a quill. Fonts: UnifrakturMaguntia and
+ * IM Fell English SC (OFL, fonts/).
  *
- * Conventions:
- *   - The pedal MUST be position:absolute with a fixed pixel
- *     width/height — MOD's pedalboard places pedals at absolute
- *     coordinates on the board.
- *   - Don't set overflow:hidden on the pedal — MOD-UI positions the
- *     audio jacks outside the pedal frame (left:-44px / right:-44px)
- *     and clipping would hide the cable endpoints.
- *   - MOD-UI provides default visuals for .mod-input / .mod-output
- *     (audio jacks), .mod-knob-image (rotary knobs), .mod-light, and
- *     .mod-footswitch. We only position them.
+ * Conventions (INSTRUCTIONS.md):
+ *   - the pedal is position:absolute with a fixed size;
+ *   - NO overflow:hidden on the pedal: MOD-UI draws the audio jacks outside
+ *     the frame, so every layer rounds its own corners instead;
+ *   - a custom frame ships its own knob sprite (knobs/coin.png);
+ *   - {{{ns}}} on every resource URL.
  */
 
-/* ============================ Pedal frame ============================ */
-.tossacoin-pedal {
-    width: 320px;
-    height: 160px;
-    position: absolute;
-    /* Self-contained skin so the pedal renders without MOD's built-in panel
-       image — used by render_screenshot.py, and a clean base to restyle. */
-    background: linear-gradient(135deg, #4a3524 0%, #6a4a30 50%, #34241a 100%);
-    border-radius: 12px;
-    box-shadow:
-        inset 0 0 0 2px rgba(255, 220, 160, 0.15),
-        inset 0 0 24px rgba(0, 0, 0, 0.5),
-        0 4px 10px rgba(0, 0, 0, 0.5);
-    color: #f0e2c8;
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+@font-face {
+    font-family: "TossBlackletter";
+    src: url(/resources/fonts/UnifrakturMaguntia-Book.ttf{{{ns}}}) format("truetype");
+}
+@font-face {
+    font-family: "TossFell";
+    src: url(/resources/fonts/IMFeENsc28P.ttf{{{ns}}}) format("truetype");
 }
 
-/* Drag handle covers the whole pedal so it can be dragged anywhere on
-   it. Lives behind all interactive controls (z-index 0) so they remain
-   clickable. */
+/* ============================ Frame ============================ */
+.tossacoin-pedal {
+    position: absolute;
+    width: 640px;
+    height: 300px;
+    border-radius: 14px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7);
+    font-family: "TossFell", "Palatino Linotype", Georgia, serif;
+    color: #f6dc94;
+}
 .tossacoin-pedal .mod-drag-handle {
     position: absolute;
     inset: 0;
     z-index: 0;
     cursor: move;
 }
+.tossacoin-pedal .toss-face,
+.tossacoin-pedal .toss-face::after {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    pointer-events: none;
+}
+.tossacoin-pedal .toss-face {
+    background: url(/resources/img/damask-navy.jpg{{{ns}}}) center / cover;
+}
+.tossacoin-pedal .toss-face::after {        /* vignette + edge bevel */
+    content: "";
+    background: radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(5, 10, 30, 0.55) 100%);
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), inset 0 2px 1px rgba(255, 255, 255, 0.15);
+}
+.tossacoin-pedal .toss-band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 104px;
+    border-radius: 0 0 14px 14px;
+    border-top: 3px solid #c9973a;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.5);
+    background:
+        linear-gradient(rgba(40, 0, 30, 0.35), rgba(40, 0, 30, 0.35)),
+        url(/resources/img/damask-magenta.jpg{{{ns}}}) center / cover;
+    pointer-events: none;
+}
+.tossacoin-pedal .toss-trim {               /* twisted gold cord */
+    position: absolute;
+    inset: 7px;
+    border-radius: 9px;
+    border: 3px solid transparent;
+    background: repeating-linear-gradient(45deg, #f8e08a 0 2px, #b8862a 2px 4px, #6e4a10 4px 5px) border-box;
+    -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0);
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
+    pointer-events: none;
+}
 
-/* All interactive / informative elements sit above the drag handle. */
-.tossacoin-pedal .mod-plugin-brand,
+/* ============================ Title ============================ */
 .tossacoin-pedal .mod-plugin-name,
-.tossacoin-pedal .tossacoin-controls,
-.tossacoin-pedal .mod-light,
-.tossacoin-pedal .mod-footswitch,
-.tossacoin-pedal .mod-pedal-input,
-.tossacoin-pedal .mod-pedal-output {
+.tossacoin-pedal .mod-plugin-brand {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    pointer-events: none;
+    z-index: 1;
+}
+.tossacoin-pedal .mod-plugin-name { top: 16px; }
+.tossacoin-pedal .mod-plugin-name h1 {
+    margin: 0;
+    font-family: "TossBlackletter", serif;
+    font-weight: normal;
+    font-size: 46px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #e8b947;                         /* fallback without background-clip */
+    background: linear-gradient(180deg, #fff0b0, #e8b947 45%, #a8761c 60%, #f5d77c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 2px rgba(10, 0, 20, 0.9));
+}
+.tossacoin-pedal .mod-plugin-brand { top: 63px; }
+.tossacoin-pedal .mod-plugin-brand h1 {
+    margin: 0;
+    font-family: "TossFell", serif;
+    font-weight: normal;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #f2d88f;
+    text-shadow: 0 1px 2px #050a1e;
+}
+.tossacoin-pedal .mod-plugin-brand em {
+    font-family: "TossBlackletter", serif;
+    font-style: normal;
+    font-size: 17px;
+    letter-spacing: 1px;
+    text-transform: none;
+    margin-right: 6px;
+}
+.tossacoin-pedal .toss-quill {
+    position: absolute;
+    width: 46px;
+    top: 0;
+    right: 118px;
+    transform: rotate(38deg);
+    filter: drop-shadow(-4px 5px 3px rgba(5, 10, 30, 0.7));
+    pointer-events: none;
     z-index: 1;
 }
 
-/* ============================ Branding text ============================
-   MOD-UI styles the text itself (font, colour, weight) via its built-in
-   panel CSS. We only position the containers. */
-.tossacoin-pedal .mod-plugin-brand {
+/* ============================ Knobs ============================ */
+.tossacoin-pedal .toss-knobs {
     position: absolute;
-    top: 10px;
-    left: 0;
-    right: 0;
+    top: 92px;
+    left: 22px;
+    right: 22px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 1;
+}
+.tossacoin-pedal .toss-knob {
+    position: relative;
+    width: 92px;
+    height: 96px;
     text-align: center;
+}
+.tossacoin-pedal .toss-dots {               /* faint gold scale, -135..+135 deg */
+    position: absolute;
+    left: 13px;
+    top: -1px;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 225deg, #f2cf6a 0 2.2deg, transparent 2.2deg 27deg);
+    -webkit-mask: radial-gradient(circle, transparent 30px, #000 30.5px 32.5px, transparent 33px);
+    mask: radial-gradient(circle, transparent 30px, #000 30.5px 32.5px, transparent 33px);
+    clip-path: polygon(50% 50%, 0 100%, 0 0, 100% 0, 100% 100%);
     pointer-events: none;
 }
-.tossacoin-pedal .mod-plugin-name {
+.tossacoin-pedal .toss-knob .mod-knob-image {
     position: absolute;
-    top: 28px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    pointer-events: none;
+    left: 19px;
+    top: 5px;
+    width: 54px;
+    height: 54px;
+    background-image: url(/resources/knobs/coin.png{{{ns}}});
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: auto 54px;             /* == box height: MOD counts square frames */
+    filter: drop-shadow(1px 4px 3px rgba(5, 0, 10, 0.8));
+    cursor: pointer;
 }
-.tossacoin-pedal .mod-plugin-brand h1 {
-    margin: 0; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
-    color: rgba(240, 226, 200, 0.7); font-weight: 400;
-}
-.tossacoin-pedal .mod-plugin-name h1 {
-    margin: 0; font-size: 18px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: #f0e2c8; font-weight: 700; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-}
-
-/* ============================ Controls ============================
-   MOD-UI applies its built-in knob sprite from `modgui:knob` in
-   modgui.ttl. Don't override .mod-knob-image's background-image unless
-   you want a custom sprite (drop it at modgui/knobs/<name>.png and
-   reference via `background-image: url(/resources/knobs/<name>.png{{{ns}}}`).
-   The film_strip widget rotates frames by setting
-   background-position-x at runtime; width/height set display size. */
-.tossacoin-pedal .tossacoin-controls {
+.tossacoin-pedal .toss-knob .mod-knob-title {
     position: absolute;
     top: 70px;
     left: 0;
     right: 0;
-    display: flex;
-    justify-content: center;
-}
-.tossacoin-pedal .tossacoin-knob {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-.tossacoin-pedal .tossacoin-knob .mod-knob-image {
-    /* Use the bundled knob film-strip (knobs/black.png) rather than MOD's
-       built-in knob, so the pedal is fully self-contained and can be rendered
-       to a screenshot by render_screenshot.py. Swap the sprite to reskin. */
-    background-image: url(/resources/knobs/black.png{{{ns}}});
-    background-repeat: no-repeat;
-    background-position: left center;
-    width: 56px;
-    height: 56px;
-    background-size: auto 56px;
-}
-.tossacoin-pedal .tossacoin-knob .mod-knob-title {
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    color: rgba(240, 226, 200, 0.85);
+    font-size: 14px;
+    color: #f6dc94;
+    text-shadow: 0 1px 2px #050a1e, 0 0 6px rgba(5, 10, 30, 0.8);
+    pointer-events: none;
 }
 
-/* ============================ Bypass light + footswitch ============================
-   MOD-UI draws the actual graphics (LED, switch) from the panel skin.
-   We only position the containers. .on is toggled by MOD-UI on bypass
-   state changes — the default styling already animates correctly. */
-.tossacoin-pedal .mod-light {
+/* ============================ Engraved selectors ============================ */
+.tossacoin-pedal .toss-sels {
     position: absolute;
-    bottom: 14px;
-    left: 18px;
+    bottom: 27px;
+    left: 26px;
+    width: 450px;
+    display: grid;
+    grid-template-columns: 66px repeat(4, 1fr);
+    row-gap: 9px;
+    align-items: baseline;
+    font-size: 14px;
+    color: #f2e2c4;
+    text-shadow: 0 1px 2px #000;
+    z-index: 1;
 }
+.tossacoin-pedal .toss-sels b {
+    font-weight: normal;
+    color: #e8c46a;
+}
+.tossacoin-pedal .toss-sels i {
+    position: relative;
+    font-style: normal;
+    text-align: center;
+    opacity: 0.5;
+    cursor: pointer;
+}
+.tossacoin-pedal .toss-sels i:hover { opacity: 0.8; }
+.tossacoin-pedal .toss-sels i.on {
+    opacity: 1;
+    color: #fff;
+}
+.tossacoin-pedal .toss-sels i.on::after {   /* pearl */
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    width: 7px;
+    height: 7px;
+    margin-left: -3.5px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0, #f4e8f0 30%, #c9a9c4 80%, #8e6f8a);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================ Footswitch + light ============================ */
 .tossacoin-pedal .mod-footswitch {
     position: absolute;
-    bottom: 6px;
-    left: 38px;
+    right: 46px;
+    bottom: 24px;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: url(/resources/img/coin-silver.png{{{ns}}}) center / contain no-repeat;
+    filter: drop-shadow(2px 6px 5px rgba(0, 0, 0, 0.8));
+    cursor: pointer;
+    z-index: 1;
+}
+.tossacoin-pedal .mod-footswitch:active { transform: translateY(1px) scale(0.98); }
+.tossacoin-pedal .mod-light {               /* the ruby sits in the coin's eye */
+    position: absolute;
+    left: 568.3px;
+    top: 232.5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+}
+.tossacoin-pedal .mod-light.on {
+    background: radial-gradient(circle at 36% 30%, #ffd0d6 0, #ff2a4a 35%, #9a0020 75%, #4a000c);
+    box-shadow: 0 0 6px 2px rgba(255, 40, 80, 0.85);
 }
 
 /* ============================ Audio I/O jacks ============================
-   No overrides. MOD-UI's pedals.css + dashboard.css fully styles and
-   positions the jacks (left:-87px / right:-87px, top:106px, 56 px tall
-   with 13 px margin-bottom between siblings, jack visuals from the
-   bundled PNG sprites). Its drag handler computes cable endpoints
-   against those exact defaults — any custom top / left / right /
-   margin we apply re-introduces drift between the cable end and the
-   visual plug. (Stereo plugins exhibit a known MOD-UI bug where the
-   bottom output cable drifts after a drag; this also reproduces on
-   stock plugins like TAP Chorus/Flanger, so it's not a plugin-side
-   issue to fix.)
-
-   If the jack stack ends up off-centre on a custom-sized pedal, the
-   right fix is to keep the pedal close to MOD-UI's standard pedal
-   height (~160-220 px), NOT to nudge the jacks. */
+   No overrides: MOD-UI positions the jacks and computes cable endpoints
+   against its own defaults (see the template's note). */
+.tossacoin-pedal .mod-pedal-input,
+.tossacoin-pedal .mod-pedal-output {
+    z-index: 1;
+}

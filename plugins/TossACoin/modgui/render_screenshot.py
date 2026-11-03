@@ -12,8 +12,8 @@ When you fork this template, update the plugin-specific constants below
 (ICON/STYLE/SPRITE/OUT names, the SUBSTITUTIONS to match modgui.ttl, and
 WIDTH/HEIGHT to your pedal size).
 
-Run inside any Python env that has Playwright + Chromium:
-    pip install playwright && playwright install chromium
+Needs Google Chrome (the same one `make manual` uses; override with CHROME=...)
+and Pillow for the thumbnail:
     python3 render_screenshot.py
 """
 
@@ -22,16 +22,19 @@ import re
 import shutil
 import tempfile
 
-from playwright.sync_api import sync_playwright
+import subprocess
+
+from PIL import Image
 
 HERE   = os.path.dirname(os.path.abspath(__file__))
 ICON   = os.path.join(HERE, "icon-tossacoin.html")
 STYLE  = os.path.join(HERE, "stylesheet-tossacoin.css")
-SPRITE = os.path.join(HERE, "knobs", "black.png")
+THUMB  = os.path.join(HERE, "thumbnail-tossacoin.png")
+CHROME = os.environ.get("CHROME", "google-chrome")
 OUT    = os.path.join(HERE, "screenshot-tossacoin.png")
 
-WIDTH  = 320
-HEIGHT = 160
+WIDTH  = 640
+HEIGHT = 300
 # Device pixel ratio for the render. 2x keeps the same CSS layout but outputs
 # at double resolution — crisper on HiDPI screens and in the printed manual.
 SCALE  = 2
@@ -67,20 +70,39 @@ def render_template(html: str) -> str:
     return html
 
 
-def render_stylesheet(css: str, sprite_url: str) -> str:
+# Knob film-strip frame shown for each default (initParameter() ranges).
+KNOB_FRAMES = {
+    "sensitivity": round((50 - 0) / 100 * 64),
+    "bounce":      round((92 - 70) / 27 * 64),
+    "height":      round((0.5 - 0.1) / 1.4 * 64),
+    "pitch":       round((12 + 24) / 48 * 64),
+    "glitch":      0,
+    "level":       round((0 + 24) / 30 * 64),
+}
+
+
+def resolve_resources(text: str) -> str:
+    """MOD-UI serves modgui/ at /resources/; point those URLs at the local files."""
     for k, v in SUBSTITUTIONS.items():
-        css = css.replace(k, v)
-    css = css.replace("/resources/knobs/black.png", sprite_url)
-    return css
+        text = text.replace(k, v)
+    return text.replace("/resources/", "file://" + HERE + "/")
 
 
 def main():
     with open(ICON,  "r", encoding="utf-8") as f: icon_html = f.read()
     with open(STYLE, "r", encoding="utf-8") as f: css       = f.read()
 
-    sprite_url = "file://" + SPRITE
-    css        = render_stylesheet(css, sprite_url)
-    pedal_html = render_template(icon_html)
+    css        = resolve_resources(css)
+    pedal_html = resolve_resources(render_template(icon_html))
+    # Show the engraved selectors at their defaults (MOD-UI's script does this live).
+    for port, value in (("steps", 1), ("sound", 0), ("reverse", 0)):
+        pedal_html = pedal_html.replace(f'data-port="{port}" data-value="{value}"',
+                                        f'data-port="{port}" data-value="{value}" class="on"')
+    pedal_html = pedal_html.replace('class="mod-light"', 'class="mod-light on"')
+    # Knobs at their defaults: frame = (default - min) / (max - min) * 64.
+    for port, frame in KNOB_FRAMES.items():
+        pedal_html = pedal_html.replace(f'mod-port-symbol="{port}"',
+                                        f'mod-port-symbol="{port}" style="background-position: -{frame * 54}px 0"')
 
     page = f"""<!doctype html>
 <html><head>
@@ -93,6 +115,7 @@ def main():
     background: transparent;
   }}
   .pedal-host {{ position: relative; width: {WIDTH}px; height: {HEIGHT}px; }}
+  .tossacoin-pedal {{ box-shadow: none; }}
 {css}
 </style></head>
 <body><div class="pedal-host">{pedal_html}</div></body></html>"""
@@ -101,23 +124,18 @@ def main():
         page_path = os.path.join(tmp, "render.html")
         with open(page_path, "w", encoding="utf-8") as f:
             f.write(page)
+        tmp_out = os.path.join(tmp, "screenshot.png")
+        subprocess.run([CHROME, "--headless", "--disable-gpu", "--hide-scrollbars",
+                        "--allow-file-access-from-files", "--default-background-color=00000000",
+                        f"--force-device-scale-factor={SCALE}", f"--window-size={WIDTH},{HEIGHT}",
+                        "--virtual-time-budget=4000", f"--screenshot={tmp_out}", "file://" + page_path],
+                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # 256-colour palette PNG: ~3x smaller, no visible loss on fabric and coins.
+        Image.open(tmp_out).quantize(colors=256, method=Image.FASTOCTREE).save(OUT, optimize=True)
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            context = browser.new_context(
-                viewport={"width": WIDTH, "height": HEIGHT},
-                device_scale_factor=SCALE,
-            )
-            tab = context.new_page()
-            tab.goto("file://" + page_path)
-            tab.wait_for_load_state("networkidle")
-
-            tmp_out = os.path.join(tmp, "screenshot.png")
-            tab.screenshot(path=tmp_out, omit_background=False, full_page=False)
-            browser.close()
-
-        shutil.copyfile(tmp_out, OUT)
-        print(f"Wrote {OUT} ({WIDTH*SCALE}x{HEIGHT*SCALE} @ {SCALE}x, rendered by headless Chromium)")
+    shot = Image.open(OUT).convert("RGBA")
+    shot.resize((128, round(128 * HEIGHT / WIDTH)), Image.LANCZOS).save(THUMB, optimize=True)
+    print(f"Wrote {OUT} ({WIDTH*SCALE}x{HEIGHT*SCALE} @ {SCALE}x) and {THUMB}")
 
 
 if __name__ == "__main__":

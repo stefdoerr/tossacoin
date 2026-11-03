@@ -1,42 +1,70 @@
 <!--
-  TossACoin — MOD pedalboard icon template.
+  Toss a Coin — MOD pedalboard icon template (640 x 300).
 
-  Mustache tokens ({{brand}}, {{label}}, {{color}}) are substituted by
-  MOD-UI at render time using the values from modgui.ttl. MOD-UI also
-  binds knobs / switches / displays via the `mod-role` attribute (e.g.
-  mod-role="input-control-port" mod-port-symbol="gain") — the LV2 port
-  symbol must match an `lv2:symbol` declared in modgui.ttl AND in the
-  plugin's generated TTL (which comes from initParameter()).
+  Navy-teal silk damask on top, magenta damask band below, gold cord trim.
+  Knobs are MOD film-strip widgets (knobs/coin.png, a rotating gold stater);
+  the three discrete controls are engraved words handled by
+  script-tossacoin.js (data-port / data-value); the footswitch is a silver
+  tetradrachm whose eye is the bypass light.
 
   Required structural elements (MOD-UI complains visually if missing):
-    - <div mod-role="drag-handle">  whole-pedal drag region
-    - <div mod-role="bypass-light"> bypass LED
-    - <div mod-role="bypass">       footswitch
-    - audio I/O loops {{#effect.ports.audio.input}}…{{/...}}
+    drag-handle, bypass-light, bypass, and the audio I/O loops below.
 -->
-<div class="mod-pedal tossacoin-pedal mod-pedal-tossacoin mod-{{color}} {{color}}">
+<div class="mod-pedal tossacoin-pedal">
 
     <div mod-role="drag-handle" class="mod-drag-handle"></div>
 
-    <div class="mod-plugin-brand"><h1>{{brand}}</h1></div>
+    <div class="toss-face"></div>
+    <div class="toss-band"></div>
+    <div class="toss-trim"></div>
+
+    <img class="toss-quill" src="/resources/img/quill.png{{{ns}}}" alt="">
     <div class="mod-plugin-name"><h1>{{label}}</h1></div>
+    <div class="mod-plugin-brand"><h1><em>to</em> {{brand}}</h1></div>
 
-    <!-- Bypass light + footswitch (required by MOD pedalboard) -->
-    <div class="mod-light on" mod-role="bypass-light"></div>
-    <div class="mod-footswitch" mod-role="bypass"></div>
-
-    <!-- Single GAIN knob. To add more knobs, duplicate this block and
-         change the port symbol + title. The port symbol must match a
-         parameter declared in initParameter() (e.g. "gain"). -->
-    <div class="tossacoin-controls">
-        <div class="mod-knob tossacoin-knob">
+    <div class="toss-knobs">
+        <div class="mod-knob toss-knob"><div class="toss-dots"></div>
+            <div class="mod-knob-image" mod-role="input-control-port" mod-port-symbol="sensitivity"></div>
+            <span class="mod-knob-title">Sensitivity</span></div>
+        <div class="mod-knob toss-knob"><div class="toss-dots"></div>
+            <div class="mod-knob-image" mod-role="input-control-port" mod-port-symbol="bounce"></div>
+            <span class="mod-knob-title">Bounce</span></div>
+        <div class="mod-knob toss-knob"><div class="toss-dots"></div>
+            <div class="mod-knob-image" mod-role="input-control-port" mod-port-symbol="height"></div>
+            <span class="mod-knob-title">Height</span></div>
+        <div class="mod-knob toss-knob"><div class="toss-dots"></div>
+            <div class="mod-knob-image" mod-role="input-control-port" mod-port-symbol="pitch"></div>
+            <span class="mod-knob-title">Pitch</span></div>
+        <div class="mod-knob toss-knob"><div class="toss-dots"></div>
+            <div class="mod-knob-image" mod-role="input-control-port" mod-port-symbol="glitch"></div>
+            <span class="mod-knob-title">Glitch</span></div>
+        <div class="mod-knob toss-knob"><div class="toss-dots"></div>
             <div class="mod-knob-image" mod-role="input-control-port" mod-port-symbol="level"></div>
-            <span class="mod-knob-title">LEVEL</span>
-        </div>
+            <span class="mod-knob-title">Level</span></div>
     </div>
 
-    <!-- Audio I/O — required structure for pedalboard connections.
-         MOD-UI expands these {{#…}}{{/…}} blocks once per audio port. -->
+    <!-- Invisible 4-column grid: label, then one centred column per option,
+         so the pearls of the three rows line up. -->
+    <div class="toss-sels">
+        <b>Steps</b>
+        <i data-port="steps" data-value="0">Glide</i>
+        <i data-port="steps" data-value="1">Semitones</i>
+        <i data-port="steps" data-value="2">Fifths</i>
+        <i data-port="steps" data-value="3">Octaves</i>
+        <b>Sound</b>
+        <i data-port="sound" data-value="0">Synth</i>
+        <i data-port="sound" data-value="1">Sampled</i>
+        <span></span><span></span>
+        <b>Reverse</b>
+        <i data-port="reverse" data-value="0">Off</i>
+        <i data-port="reverse" data-value="1">On</i>
+        <span></span><span></span>
+    </div>
+
+    <div class="mod-footswitch" mod-role="bypass"></div>
+    <div class="mod-light" mod-role="bypass-light"></div>
+
+    <!-- Audio I/O — required structure for pedalboard connections. -->
     <div class="mod-pedal-input">
         {{#effect.ports.audio.input}}
         <div class="mod-input mod-input-disconnected" title="{{name}}"
