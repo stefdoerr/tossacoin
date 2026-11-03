@@ -1,0 +1,156 @@
+/*
+ * TossACoin — MOD pedal stylesheet.
+ *
+ * Deliberately minimal: only positions our own controls and the audio
+ * jacks. The pedal frame texture, brand/label fonts, bypass light and
+ * footswitch visuals are all left to MOD-UI's built-in skin (selected
+ * by `modgui:model` / `modgui:panel` / `modgui:color` / `modgui:knob`
+ * in modgui.ttl). If you want a custom look, add `background:`,
+ * `box-shadow:`, custom `.mod-plugin-brand h1 { ... }` etc. here.
+ *
+ * Conventions:
+ *   - The pedal MUST be position:absolute with a fixed pixel
+ *     width/height — MOD's pedalboard places pedals at absolute
+ *     coordinates on the board.
+ *   - Don't set overflow:hidden on the pedal — MOD-UI positions the
+ *     audio jacks outside the pedal frame (left:-44px / right:-44px)
+ *     and clipping would hide the cable endpoints.
+ *   - MOD-UI provides default visuals for .mod-input / .mod-output
+ *     (audio jacks), .mod-knob-image (rotary knobs), .mod-light, and
+ *     .mod-footswitch. We only position them.
+ */
+
+/* ============================ Pedal frame ============================ */
+.tossacoin-pedal {
+    width: 320px;
+    height: 160px;
+    position: absolute;
+    /* Self-contained skin so the pedal renders without MOD's built-in panel
+       image — used by render_screenshot.py, and a clean base to restyle. */
+    background: linear-gradient(135deg, #4a3524 0%, #6a4a30 50%, #34241a 100%);
+    border-radius: 12px;
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 220, 160, 0.15),
+        inset 0 0 24px rgba(0, 0, 0, 0.5),
+        0 4px 10px rgba(0, 0, 0, 0.5);
+    color: #f0e2c8;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Drag handle covers the whole pedal so it can be dragged anywhere on
+   it. Lives behind all interactive controls (z-index 0) so they remain
+   clickable. */
+.tossacoin-pedal .mod-drag-handle {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    cursor: move;
+}
+
+/* All interactive / informative elements sit above the drag handle. */
+.tossacoin-pedal .mod-plugin-brand,
+.tossacoin-pedal .mod-plugin-name,
+.tossacoin-pedal .tossacoin-controls,
+.tossacoin-pedal .mod-light,
+.tossacoin-pedal .mod-footswitch,
+.tossacoin-pedal .mod-pedal-input,
+.tossacoin-pedal .mod-pedal-output {
+    z-index: 1;
+}
+
+/* ============================ Branding text ============================
+   MOD-UI styles the text itself (font, colour, weight) via its built-in
+   panel CSS. We only position the containers. */
+.tossacoin-pedal .mod-plugin-brand {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    pointer-events: none;
+}
+.tossacoin-pedal .mod-plugin-name {
+    position: absolute;
+    top: 28px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    pointer-events: none;
+}
+.tossacoin-pedal .mod-plugin-brand h1 {
+    margin: 0; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(240, 226, 200, 0.7); font-weight: 400;
+}
+.tossacoin-pedal .mod-plugin-name h1 {
+    margin: 0; font-size: 18px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #f0e2c8; font-weight: 700; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================ Controls ============================
+   MOD-UI applies its built-in knob sprite from `modgui:knob` in
+   modgui.ttl. Don't override .mod-knob-image's background-image unless
+   you want a custom sprite (drop it at modgui/knobs/<name>.png and
+   reference via `background-image: url(/resources/knobs/<name>.png{{{ns}}}`).
+   The film_strip widget rotates frames by setting
+   background-position-x at runtime; width/height set display size. */
+.tossacoin-pedal .tossacoin-controls {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+}
+.tossacoin-pedal .tossacoin-knob {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.tossacoin-pedal .tossacoin-knob .mod-knob-image {
+    /* Use the bundled knob film-strip (knobs/black.png) rather than MOD's
+       built-in knob, so the pedal is fully self-contained and can be rendered
+       to a screenshot by render_screenshot.py. Swap the sprite to reskin. */
+    background-image: url(/resources/knobs/black.png{{{ns}}});
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 56px;
+    height: 56px;
+    background-size: auto 56px;
+}
+.tossacoin-pedal .tossacoin-knob .mod-knob-title {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgba(240, 226, 200, 0.85);
+}
+
+/* ============================ Bypass light + footswitch ============================
+   MOD-UI draws the actual graphics (LED, switch) from the panel skin.
+   We only position the containers. .on is toggled by MOD-UI on bypass
+   state changes — the default styling already animates correctly. */
+.tossacoin-pedal .mod-light {
+    position: absolute;
+    bottom: 14px;
+    left: 18px;
+}
+.tossacoin-pedal .mod-footswitch {
+    position: absolute;
+    bottom: 6px;
+    left: 38px;
+}
+
+/* ============================ Audio I/O jacks ============================
+   No overrides. MOD-UI's pedals.css + dashboard.css fully styles and
+   positions the jacks (left:-87px / right:-87px, top:106px, 56 px tall
+   with 13 px margin-bottom between siblings, jack visuals from the
+   bundled PNG sprites). Its drag handler computes cable endpoints
+   against those exact defaults — any custom top / left / right /
+   margin we apply re-introduces drift between the cable end and the
+   visual plug. (Stereo plugins exhibit a known MOD-UI bug where the
+   bottom output cable drifts after a drag; this also reproduces on
+   stock plugins like TAP Chorus/Flanger, so it's not a plugin-side
+   issue to fix.)
+
+   If the jack stack ends up off-centre on a custom-sized pedal, the
+   right fix is to keep the pedal close to MOD-UI's standard pedal
+   height (~160-220 px), NOT to nudge the jacks. */
