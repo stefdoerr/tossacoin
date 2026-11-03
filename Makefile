@@ -277,6 +277,27 @@ dwarf: dwarf-build dwarf-deploy
 
 .PHONY: dwarf dwarf-build dwarf-image dwarf-deploy
 
+# CPU benchmark on the device: cross-build tests/bench_dwarf.cpp with the
+# Dwarf toolchain (same compiler as mod-build/build-plugin.sh), copy it over
+# and run it there under SCHED_FIFO so preemption doesn't pollute the worst
+# block. Fails if the plugin is over its CPU budget.
+DWARF_CXX := /root/mod-workdir/moddwarf-new/host/usr/bin/aarch64-modaudio-linux-gnu-g++
+
+dwarf-bench:
+	@mkdir -p build/bench
+	docker run --rm \
+		-e HOST_UID=$$(id -u) -e HOST_GID=$$(id -g) \
+		-v "$(CURDIR):/src:ro" \
+		-v "$(CURDIR)/build/bench:/out" \
+		$(CROSS_IMAGE) \
+		bash -c '$(DWARF_CXX) -O3 -ffast-math -std=gnu++14 -DNDEBUG -I/src/$(PLUGIN_DIR) -I/src/dpf/distrho -I/src/tests \
+			/src/tests/bench_dwarf.cpp /src/$(PLUGIN_DIR)/*.cpp /src/dpf/distrho/src/DistrhoPlugin.cpp \
+			-o /out/bench_dwarf && chown $$HOST_UID:$$HOST_GID /out/bench_dwarf'
+	scp -O build/bench/bench_dwarf "$(DWARF_USER)@$(DWARF_HOST):/tmp/"
+	ssh "$(DWARF_USER)@$(DWARF_HOST)" 'if command -v chrt >/dev/null; then chrt -f 50 /tmp/bench_dwarf; else /tmp/bench_dwarf; fi'
+
+.PHONY: dwarf-bench
+
 # ---------------------------------------------------------------------------
 # Patchstorage build — cross-compile for the three targets patchstorage.com's
 # LV2-plugins platform supports, using Patchstorage's own prebuilt toolchain

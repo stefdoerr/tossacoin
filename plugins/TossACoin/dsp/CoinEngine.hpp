@@ -56,12 +56,12 @@ public:
         onset_.setThresholdDb(p.thresholdDb);
     }
 
-    // Once per block: bounded pitch work (0.75 lags per frame, fractional part
+    // Once per block: bounded pitch work (0.5 lags per frame, fractional part
     // carried so 1-frame host blocks still progress), then start the drop that
     // just got its pitch.
     void work(uint32_t frames)
     {
-        lagCredit_ += 0.75f * float(frames);
+        lagCredit_ += 0.5f * float(frames);
         const int lags = int(lagCredit_);
         lagCredit_ -= float(lags);
         pd_.work(lags);

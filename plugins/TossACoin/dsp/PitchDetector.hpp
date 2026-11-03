@@ -51,12 +51,21 @@ public:
             const uint32_t t = nextTau_;
             if (n_ < W_ + t + 1) return;     // its samples haven't arrived yet
 
-            double d = 0.0;
-            for (uint32_t j = 0; j < W_; ++j)
+            // Float with 4 independent partial sums: vectorises on the
+            // Dwarf's NEON unit. The serial double loop this replaces cost
+            // ~55% of a 128-frame block there (measured by make dwarf-bench).
+            const float* x = buf_.data();
+            const float* y = x + t;
+            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+            uint32_t j = 0;
+            for (; j + 4 <= W_; j += 4)
             {
-                const float diff = buf_[j] - buf_[j + t];
-                d += double(diff) * diff;
+                const float e0 = x[j] - y[j], e1 = x[j + 1] - y[j + 1];
+                const float e2 = x[j + 2] - y[j + 2], e3 = x[j + 3] - y[j + 3];
+                s0 += e0 * e0; s1 += e1 * e1; s2 += e2 * e2; s3 += e3 * e3;
             }
+            for (; j < W_; ++j) { const float e = x[j] - y[j]; s0 += e * e; }
+            const double d = double((s0 + s1) + (s2 + s3));
             cum_ += d;
             cmnd_[t] = cum_ > 0.0 ? float(d * t / cum_) : 1.0f;
             ++nextTau_;

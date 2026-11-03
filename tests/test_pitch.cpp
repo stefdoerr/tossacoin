@@ -8,7 +8,7 @@
 
 struct Result { float hz; double latency; bool done; };
 
-// Feed 128-sample blocks (push, then work(96)) like the plugin does at 48 kHz.
+// Feed 128-sample blocks (push, then work(64)) like the plugin does at 48 kHz.
 static Result detect(double fs, std::function<float(uint32_t)> sig)
 {
     toss::PitchDetector pd;
@@ -18,7 +18,7 @@ static Result detect(double fs, std::function<float(uint32_t)> sig)
     while (i < uint32_t(0.3 * fs))
     {
         for (int k = 0; k < 128; ++k, ++i) pd.push(sig(i));
-        pd.work(96);
+        pd.work(64);
         if (pd.done()) return { pd.hz(), i / fs, true };
     }
     return { pd.hz(), i / fs, false };
