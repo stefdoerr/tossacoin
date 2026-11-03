@@ -42,8 +42,8 @@ static void expect(const char* what, bool ok)
 static const uint32_t kBlock = 512;
 static const double   kRate  = 48000.0;
 static const uint32_t kLen   = 24000;      // 0.5 s
-static const uint32_t kParamGain   = 0;
-static const uint32_t kParamBypass = 1;
+static const uint32_t kParamLevel  = 8;
+static const uint32_t kParamBypass = 9;
 
 static float gIn[kLen], gOutL[kLen], gOutR[kLen];
 
@@ -88,7 +88,7 @@ int main()
     {
         PluginExporter plugin(nullptr, nullptr, requestStub, nullptr);
         plugin.activate();
-        plugin.setParameterValue(kParamGain, 6.0f);
+        plugin.setParameterValue(kParamLevel, 6.0f);
         plugin.setParameterValue(kParamBypass, 1.0f);
         process(plugin, 0, kBlock);
 
@@ -97,15 +97,15 @@ int main()
             dry = dry && gOutL[i] == gIn[i] && gOutR[i] == gIn[i];
         expect("loaded bypassed: dry from the first sample, no ramp", dry);
 
-        // Un-bypass: the first samples are still close to dry (no jump to
-        // +6 dB), and the fade is finished within 10 ms (480 samples).
+        // Un-bypass: Toss a Coin only ADDS coins after the first bounce
+        // (~0.43 s for this 110 Hz pluck), so until then the output is the
+        // dry signal exactly, whatever Level says - no jump, no click.
         plugin.setParameterValue(kParamBypass, 0.0f);
         process(plugin, kBlock, kBlock);
-        const uint32_t early = kBlock + 20, late = 2 * kBlock - 1;
-        expect("un-bypass fades in instead of jumping",
-               std::fabs(gOutL[early]) < 1.1f * std::fabs(gIn[early]));
-        expect("un-bypass reaches +6 dB within 10 ms",
-               std::fabs(gOutL[late] - 1.99526f * gIn[late]) < 1e-6f);
+        bool untouched = true;
+        for (uint32_t i = kBlock; i < 2 * kBlock; ++i)
+            untouched = untouched && gOutL[i] == gIn[i] && gOutR[i] == gIn[i];
+        expect("un-bypass leaves the dry untouched until the first coin", untouched);
 
         // Bypass again: after the fade, exact dry at unity despite +6 dB.
         plugin.setParameterValue(kParamBypass, 1.0f);

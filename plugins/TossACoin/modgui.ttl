@@ -42,7 +42,7 @@
         # must match the `lv2:symbol` strings in the generated <plugin>.ttl
         # (which come from initParameter()'s `parameter.symbol` field).
         modgui:port [
-            lv2:symbol "gain" ;
-            lv2:name "Gain"
+            lv2:symbol "level" ;
+            lv2:name "Level"
         ]
     ] .

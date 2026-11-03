@@ -5,7 +5,9 @@
 namespace toss {
 
 // Sensitivity knob (0..100 %) -> attack threshold on the fast envelope, dBFS.
-inline float sensitivityToThresholdDb(float percent) { return -12.0f - 0.4f * percent; }
+// 50 % = -40 dBFS: measured on real guitar at DI level (raw peaks ~-22 dBFS),
+// hard picks reach -31..-35 dBFS on this envelope and soft notes -49..-55.
+inline float sensitivityToThresholdDb(float percent) { return -20.0f - 0.4f * percent; }
 
 // Hard-attack detector. Two one-pole envelopes of |x| (fast 2 ms, slow 100 ms);
 // a drop starts on the rising edge of "fast is above the threshold AND well

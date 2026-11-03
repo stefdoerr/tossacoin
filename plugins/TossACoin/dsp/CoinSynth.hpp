@@ -14,6 +14,10 @@ inline float coinFundamental(float noteHz, float semis)
     return f;
 }
 
+// Free circular plate mode ratios (constexpr at namespace scope: internal
+// linkage, so the header is safe to include from several files in C++14).
+constexpr float kPlateRatios[6] = { 1.0f, 1.73f, 2.33f, 3.91f, 4.11f, 6.30f };
+
 // Pool of ringing coins. Each ring is a free circular plate: 6 modes, each a
 // two-pole resonator (2 multiplies per sample), plus a 2 ms noise click.
 // Like the approved prototype, a ring lasts min(1 s, 5 tau0); it fades out
@@ -32,7 +36,7 @@ public:
         clickLen_ = int(0.002 * fs);
         clickDecay_ = float(std::exp(-4.0 / clickLen_));   // tau = click length / 4
         fadeLen_ = int(0.030 * fs);
-        for (int i = 0; i < kModes; ++i) tauDiv_[i] = std::pow(kRatios[i], 0.8f);
+        for (int i = 0; i < kModes; ++i) tauDiv_[i] = std::pow(kPlateRatios[i], 0.8f);
         reset();
     }
 
@@ -50,7 +54,7 @@ public:
         r.nModes = 0;
         for (int i = 0; i < kModes; ++i)
         {
-            const double fr = double(fc) * kRatios[i];
+            const double fr = double(fc) * kPlateRatios[i];
             if (fr > 0.45 * fs_) continue;
             const double w = 2.0 * M_PI * fr / fs_;
             const double d = std::exp(-1.0 / (double(tau0 / tauDiv_[i]) * fs_));
@@ -110,8 +114,6 @@ public:
     int activeRings() const { return active_; }
 
 private:
-    static constexpr float kRatios[kModes] = { 1.0f, 1.73f, 2.33f, 3.91f, 4.11f, 6.30f };
-
     struct Mode { float a1 = 0, a2 = 0, y1 = 0, y2 = 0; };
     struct Ring {
         Mode modes[kModes];
@@ -140,7 +142,5 @@ private:
     float clickDecay_ = 0.96f;
     float tauDiv_[kModes] = {};
 };
-
-constexpr float CoinSynth::kRatios[CoinSynth::kModes];
 
 } // namespace toss

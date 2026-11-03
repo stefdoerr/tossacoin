@@ -49,9 +49,9 @@ int main()
         CHECK(triggers(plucks(0.1f, {0.0}, 3.0, 2.0)).size() == 1);
     }
     {   // threshold_mapping
-        CHECK(toss::sensitivityToThresholdDb(0.0f) == -12.0f);
-        CHECK(toss::sensitivityToThresholdDb(50.0f) == -32.0f);
-        CHECK(toss::sensitivityToThresholdDb(100.0f) == -52.0f);
+        CHECK(toss::sensitivityToThresholdDb(0.0f) == -20.0f);
+        CHECK(toss::sensitivityToThresholdDb(50.0f) == -40.0f);
+        CHECK(toss::sensitivityToThresholdDb(100.0f) == -60.0f);
     }
     {   // rng_range
         toss::Rng rng(1);

@@ -1,21 +1,18 @@
 /*
- * TossACoin — minimal DPF plugin example for MOD Desktop / MOD Dwarf.
+ * Toss a Coin — every hard attack drops a coin on the floor.
  *
- * Mono input → stereo output, with a single GAIN knob (±24 dB) and an
- * in-plugin bypass that crossfades instead of clicking. Replace the wet
- * path in run() with your own DSP, add parameters as needed.
+ * The note you play sets the size of the coin: low notes are fat coins whose
+ * bounces start slow, high notes small coins that clatter quickly. The
+ * bounces speed up like a real dropped coin, ring like a small bell (or
+ * replay your own attack, in Sampled mode) and step in pitch as they go.
  *
- * Useful patterns to crib (see INSTRUCTIONS.md):
- *   - Equal-power dry/wet crossfade for a MIX knob
- *   - Per-resonator tanh saturator inside feedback loops
- *   - Soft limit on the wet path of feedback effects
- *   - One-pole envelope follower for noise gates
- *   - Parameter smoothing to avoid zipper noise (only the bypass
- *     crossfade here; anything you build on top should smooth its knobs
- *     and snap them on the first run() the same way)
+ * Mono in -> stereo out (same signal both sides). The dry signal always
+ * passes at unity; coins are added on top: out = dry + Level * softLimit(wet).
+ * All DSP lives in dsp/ (see dsp/CoinEngine.hpp); this file is the DPF glue.
  */
 
 #include "DistrhoPlugin.hpp"
+#include "dsp/CoinEngine.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -26,22 +23,30 @@ class TossACoinPlugin : public Plugin
 {
 public:
     enum ParamIndex {
-        kParamGain = 0,
-        kParamBypass,   // new controls go above this until the first release;
-                        // after that, append at the end and never reorder
+        kParamSensitivity = 0,
+        kParamBounce,
+        kParamHeight,
+        kParamPitch,
+        kParamSteps,
+        kParamGlitch,
+        kParamReverse,
+        kParamSound,
+        kParamLevel,
+        kParamBypass,   // after the first release: append new ports only, never reorder
         kNumParams
     };
+
+    enum GroupId { kGroupTrigger = 0, kGroupDrop, kGroupPitch, kGroupOutput };
 
     TossACoinPlugin()
         : Plugin(kNumParams, 0, 0)
     {
+        for (uint32_t i = 0; i < kParamBypass; ++i) fValues[i] = kSpecs[i].def;
         sampleRateChanged(getSampleRate());
     }
 
 protected:
     // ---------------- Information ----------------
-    // Derive label / maker / homepage from DISTRHO_PLUGIN_INFO macros so
-    // the stable and beta builds report distinct identity to the host.
 
     const char* getLabel()       const override { return DISTRHO_PLUGIN_BRAND; }
     const char* getMaker()       const override { return DISTRHO_PLUGIN_BRAND; }
@@ -49,9 +54,6 @@ protected:
     const char* getLicense()     const override { return "ISC"; }
     uint32_t    getVersion()     const override
     {
-        // Injected by the Makefile from the top-level VERSION file, which
-        // `make release` keeps in sync with the release tag. The fallback
-        // marks builds outside the Makefile as 0.0.0.
 #ifdef PLUGIN_VERSION_MAJOR
         return d_version(PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR, PLUGIN_VERSION_MICRO);
 #else
@@ -60,13 +62,12 @@ protected:
     }
     const char* getDescription() const override
     {
-        return "A minimal mono-to-stereo plugin template.";
+        return "Every hard attack drops a coin: it bounces faster and faster, rings like a "
+               "small bell and steps in pitch. The note you play sets the size of the coin.";
     }
 
     int64_t getUniqueId() const override
     {
-        // Must match the 4-char DISTRHO_PLUGIN_UNIQUE_ID from
-        // DistrhoPluginInfo.h. d_cconst packs four chars into an int32_t.
 #ifdef TOSSACOIN_BETA
         return d_cconst('d', 'T', 'o', 'B');
 #else
@@ -78,35 +79,50 @@ protected:
 
     void initAudioPort(bool input, uint32_t index, AudioPort& port) override
     {
-        if (input)
-            port.groupId = kPortGroupMono;
-        else
-            port.groupId = kPortGroupStereo;
+        port.groupId = input ? kPortGroupMono : kPortGroupStereo;
         Plugin::initAudioPort(input, index, port);
+    }
+
+    void initPortGroup(uint32_t groupId, PortGroup& portGroup) override
+    {
+        // gN_ prefixes pin the band order (MOD sorts groups by symbol).
+        switch (groupId)
+        {
+        case kGroupTrigger: portGroup.name = "Trigger"; portGroup.symbol = "g1_trigger"; break;
+        case kGroupDrop:    portGroup.name = "Drop";    portGroup.symbol = "g2_drop";    break;
+        case kGroupPitch:   portGroup.name = "Pitch";   portGroup.symbol = "g3_pitch";   break;
+        case kGroupOutput:  portGroup.name = "Output";  portGroup.symbol = "g4_output";  break;
+        default:            Plugin::initPortGroup(groupId, portGroup);                   break;
+        }
     }
 
     void initParameter(uint32_t index, Parameter& parameter) override
     {
+        if (index == kParamBypass)
+        {
+            parameter.initDesignation(kParameterDesignationBypass);
+            return;
+        }
+        const Spec& s = kSpecs[index];
+        parameter.hints      = kParameterIsAutomatable;
+        parameter.name       = s.name;
+        parameter.symbol     = s.symbol;
+        parameter.unit       = s.unit;
+        parameter.ranges.min = s.min;
+        parameter.ranges.max = s.max;
+        parameter.ranges.def = s.def;
+        parameter.groupId    = s.group;
+
         switch (index)
         {
-        case kParamGain:
-            // dB-scale gain trim. Range ±24 covers typical input/output
-            // matching needs. Pick a unit string so the host displays
-            // values readably (MOD-UI uses this in tooltips).
-            parameter.hints      = kParameterIsAutomatable;
-            parameter.name       = "Gain";
-            parameter.symbol     = "gain";
-            parameter.unit       = "dB";
-            parameter.ranges.min = -24.0f;
-            parameter.ranges.max =  24.0f;
-            parameter.ranges.def =   0.0f;
+        case kParamReverse:
+            parameter.hints |= kParameterIsBoolean | kParameterIsInteger;   // latch footswitch
             break;
-        case kParamBypass:
-            // DPF exports this as LV2 `lv2:enabled` (value inverted), VST3
-            // bypass and CLAP is-bypass. MOD then routes the pedal
-            // footswitch here instead of switching the plugin out in one
-            // sample, so run() can crossfade. Plugin-side 1 = bypassed.
-            parameter.initDesignation(kParameterDesignationBypass);
+        case kParamSteps:
+            setEnum(parameter, kStepLabels, 4);
+            break;
+        case kParamSound:
+            setEnum(parameter, kSoundLabels, 2);
             break;
         }
     }
@@ -115,45 +131,29 @@ protected:
 
     float getParameterValue(uint32_t index) const override
     {
-        switch (index)
-        {
-        case kParamGain:   return fGainDb;
-        case kParamBypass: return fBypass ? 1.0f : 0.0f;
-        }
-        return 0.0f;
+        if (index == kParamBypass) return fBypass ? 1.0f : 0.0f;
+        return index < kParamBypass ? fValues[index] : 0.0f;
     }
 
     void setParameterValue(uint32_t index, float value) override
     {
-        switch (index)
-        {
-        case kParamGain:
-            if (value < -24.0f) value = -24.0f;
-            if (value >  24.0f) value =  24.0f;
-            fGainDb = value;
-            break;
-        case kParamBypass:
-            fBypass = value > 0.5f;
-            break;
-        }
+        if (index == kParamBypass) { fBypass = value > 0.5f; return; }
+        if (index >= kParamBypass) return;
+        fValues[index] = std::min(std::max(value, kSpecs[index].min), kSpecs[index].max);
     }
 
     // ---------------- Lifecycle ----------------
 
     void activate() override
     {
-        // Initialise any DSP state here (clear buffers, reset filters).
-        // Don't initialise smoothers from parameters here: on LV2 the saved
-        // control values only arrive with the first run(), so they would
-        // ramp audibly from the defaults. Flag a snap instead.
-        fSnap = true;
+        fEngine.reset();
+        fSnap = true;   // LV2 delivers saved values with the first run(): snap, don't ramp
     }
 
     void sampleRateChanged(double newSampleRate) override
     {
-        // Recompute sample-rate-dependent coefficients here when fs
-        // changes (e.g. filter cutoffs, envelope time constants).
-        fWetStep = 1.0f / (0.010f * static_cast<float>(newSampleRate));  // 10 ms
+        fEngine.prepare(newSampleRate);                                       // sizes all buffers
+        fWetStep = 1.0f / (0.010f * static_cast<float>(newSampleRate));      // 10 ms bypass fade
     }
 
     // ---------------- DSP ----------------
@@ -164,10 +164,20 @@ protected:
         /* */ float* const outL = outputs[0];
         /* */ float* const outR = outputs[1];
 
-        // dB → linear amplitude, once per block. For zipper-free knob
-        // turns on more complex plugins, smooth the gain across the
-        // block (linear ramp from old to new) — overkill for this trim.
-        const float gainLin = std::pow(10.0f, fGainDb * (1.0f / 20.0f));
+        toss::EngineParams p;
+        p.thresholdDb = toss::sensitivityToThresholdDb(fValues[kParamSensitivity]);
+        p.bounce  = fValues[kParamBounce] * 0.01f;
+        p.height  = fValues[kParamHeight];
+        p.pitch   = fValues[kParamPitch];
+        p.glitch  = fValues[kParamGlitch] * 0.01f;
+        p.steps   = toss::Steps(int(fValues[kParamSteps] + 0.5f));
+        p.reverse = fValues[kParamReverse] > 0.5f;
+        p.sampled = fValues[kParamSound] > 0.5f;
+        fEngine.setParams(p);
+        fEngine.work(frames);
+
+        // ponytail: Level applied per block (coins only, small steps); ramp it if zipper is ever audible
+        const float level = std::pow(10.0f, fValues[kParamLevel] * (1.0f / 20.0f));
 
         const float wetTarget = fBypass ? 0.0f : 1.0f;
         if (fSnap)
@@ -178,16 +188,11 @@ protected:
 
         for (uint32_t f = 0; f < frames; ++f)
         {
-            // Linear ramp, not a one-pole: it lands exactly on 0 or 1
-            // (a one-pole creeps toward 0 through denormals).
             if (fWet < wetTarget)      fWet = std::min(fWet + fWetStep, wetTarget);
             else if (fWet > wetTarget) fWet = std::max(fWet - fWetStep, wetTarget);
 
             const float dry = in[f];
-            const float wet = dry * gainLin;   // your DSP, Mix and Level go here
-
-            // Crossfade the final output against the untouched input, so
-            // bypass leaves the dry at unity whatever Mix/Level say.
+            const float wet = dry + level * softLimit(fEngine.process(dry));   // engine runs even when bypassed
             const float y = dry + (wet - dry) * fWet;
             outL[f] = y;
             outR[f] = y;
@@ -195,7 +200,31 @@ protected:
     }
 
 private:
-    float fGainDb  = 0.0f;
+    struct Spec { const char* name; const char* symbol; const char* unit; float min, max, def; uint32_t group; };
+    static const Spec kSpecs[kParamBypass];
+    static const char* const kStepLabels[4];
+    static const char* const kSoundLabels[2];
+
+    static void setEnum(Parameter& parameter, const char* const* labels, uint8_t n)
+    {
+        parameter.hints |= kParameterIsInteger;
+        parameter.enumValues.count = n;
+        parameter.enumValues.restrictedMode = true;
+        ParameterEnumerationValue* const ev = new ParameterEnumerationValue[n];
+        for (uint8_t i = 0; i < n; ++i) { ev[i].value = float(i); ev[i].label = labels[i]; }
+        parameter.enumValues.values = ev;
+    }
+
+    // Untouched below -6 dBFS, smooth above, never reaches +-1 (INSTRUCTIONS.md).
+    static inline float softLimit(float x)
+    {
+        constexpr float kT = 0.5f, kK = 1.0f - kT;
+        const float a = std::fabs(x) - kT;
+        return a <= 0.0f ? x : std::copysign(kT + a * kK / (kK + a), x);
+    }
+
+    toss::CoinEngine fEngine;
+    float fValues[kParamBypass];
     bool  fBypass  = false;
     bool  fSnap    = true;
     float fWet     = 1.0f;   // 1 = processed, 0 = bypassed; ramps between
@@ -203,6 +232,20 @@ private:
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TossACoinPlugin)
 };
+
+const TossACoinPlugin::Spec TossACoinPlugin::kSpecs[TossACoinPlugin::kParamBypass] = {
+    { "Sensitivity", "sensitivity", "%",    0.0f, 100.0f,  50.0f, kGroupTrigger },
+    { "Bounce",      "bounce",      "%",   70.0f,  97.0f,  92.0f, kGroupDrop    },
+    { "Height",      "height",      "s",    0.1f,   1.5f,   0.5f, kGroupDrop    },
+    { "Pitch",       "pitch",       "st", -24.0f,  24.0f,  12.0f, kGroupPitch   },
+    { "Steps",       "steps",       "",     0.0f,   3.0f,   1.0f, kGroupPitch   },
+    { "Glitch",      "glitch",      "%",    0.0f, 100.0f,   0.0f, kGroupPitch   },
+    { "Reverse",     "reverse",     "",     0.0f,   1.0f,   0.0f, kGroupDrop    },
+    { "Sound",       "sound",       "",     0.0f,   1.0f,   0.0f, kGroupOutput  },
+    { "Level",       "level",       "dB", -24.0f,   6.0f,   0.0f, kGroupOutput  },
+};
+const char* const TossACoinPlugin::kStepLabels[4]  = { "Glide", "Semitones", "Fifths & octaves", "Octaves" };
+const char* const TossACoinPlugin::kSoundLabels[2] = { "Synth", "Sampled" };
 
 // ---------------------------------------------------------------------------
 

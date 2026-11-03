@@ -46,6 +46,7 @@ public:
         for (Drop& d : drops_) d.state = Drop::Free;
         detecting_ = -1;
         lastHz_ = 0.0f;
+        lagCredit_ = 0.0f;
         stamp_ = 0;
     }
 
@@ -55,10 +56,15 @@ public:
         onset_.setThresholdDb(p.thresholdDb);
     }
 
-    // Once per block: bounded pitch work, then start the drop that just got its pitch.
+    // Once per block: bounded pitch work (0.75 lags per frame, fractional part
+    // carried so 1-frame host blocks still progress), then start the drop that
+    // just got its pitch.
     void work(uint32_t frames)
     {
-        pd_.work(int(frames * 3 / 4));
+        lagCredit_ += 0.75f * float(frames);
+        const int lags = int(lagCredit_);
+        lagCredit_ -= float(lags);
+        pd_.work(lags);
         if (detecting_ < 0 || !pd_.done()) return;
 
         Drop& d = drops_[detecting_];
@@ -176,7 +182,7 @@ private:
     EngineParams p_{ -32.0f, 0.92f, 0.5f, 12.0f, 0.0f, Steps::Semitones, false, false };
     Drop drops_[kMaxDrops];
     int detecting_ = -1;
-    float lastHz_ = 0.0f;
+    float lastHz_ = 0.0f, lagCredit_ = 0.0f;
     uint32_t peakLen_ = 960, stamp_ = 0;
 };
 
