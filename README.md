@@ -15,7 +15,7 @@ stays clean; only hard attacks drop a coin. Mono in, stereo out, built with the
 
 The name nods to the bard's song "Toss a Coin to Your Witcher".
 
-**[Install](#install) · [Controls](#controls) · [Releases](../../releases/latest) · [Building & contributing](DEVELOPERS.md)**
+**[Install](#install) · [Manual (PDF)](docs/manual/tossacoin-manual.pdf) · [Controls](#controls) · [Releases](../../releases/latest) · [Building & contributing](DEVELOPERS.md)**
 
 ## Controls
 
@@ -89,6 +89,13 @@ Rescan plugins in your DAW afterwards.
 ### Raspberry Pi / Patchbox OS
 
 LV2 builds for `rpi-aarch64` and `patchbox-os-arm32` are on the Releases page as well.
+
+## Manual
+
+A beginner-friendly **[PDF manual](docs/manual/tossacoin-manual.pdf)** covers every
+control by ear, with recipes and tips. It's attached to every
+[release](../../releases/latest), and on a MOD device it's the *documentation* button
+in the plugin's info dialog.
 
 ## Building & contributing
 

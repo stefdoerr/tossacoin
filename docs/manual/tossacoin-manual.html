@@ -3,44 +3,33 @@
 <head>
 <meta charset="utf-8">
 <title>Toss a Coin User Manual</title>
-<!-- =========================================================================
-  DEMO USER MANUAL — this file is a working, annotated example of the manual
-  every plugin built from this template should ship. Read the comments; they
-  explain the conventions. See also "User manual (PDF)" in INSTRUCTIONS.md.
-
-  The rules:
-    - This ONE self-contained HTML file is the source of truth. Inline CSS
-      only — no external stylesheets, fonts, or JS.
-    - `make manual` renders it to <plugin>-manual.pdf with headless Chrome
-      (A4). Edit the HTML, regenerate, commit BOTH files. Never edit the PDF.
-    - `make release` attaches the PDF to the GitHub release automatically.
-    - Audience: a musician on MOD Desktop or a MOD Dwarf. No code, no DSP
-      math, no build instructions. Describe controls BY EAR.
-    - Content outline that works (scale to your plugin's complexity):
-      cover → what it does → quick start → the controls → recipes → tips →
-      installing → Q&A → specifications. This minimal gain plugin skips
-      recipes/tips; a real pedal should have both (see the boreas manual for
-      a full-size example).
-========================================================================== -->
+<!-- Source of the PDF manual. `make manual` renders it to tossacoin-manual.pdf
+     (A4, headless Chrome); commit both. Rules: "User manual (PDF)" in
+     INSTRUCTIONS.md. Images and fonts are relative paths into the plugin's
+     modgui folder, so render it from inside the repo. -->
 <style>
-/* ==========================================================================
-   Print source. Rendered to PDF with headless Chrome via `make manual` (A4).
-   Swap the palette to match your pedal's modgui face — these are neutral
-   template colors.
-   ========================================================================== */
-
-:root {
-    --dark:   #22252a;   /* cover background — match the pedal face      */
-    --dark2:  #2e3238;
-    --accent: #d9a441;   /* brand accent                                 */
-    --acc-d:  #a87b28;   /* darker accent for headings on white          */
-    --ink:    #26292e;   /* body text                                    */
-    --muted:  #5f666e;   /* secondary text                               */
-    --line:   #dcdfe3;   /* hairlines / table borders                    */
-    --wash:   #f4f2ec;   /* light panel background                       */
+@font-face {
+    font-family: "Unifraktur";
+    src: url("../../plugins/TossACoin/modgui/fonts/UnifrakturMaguntia-Book.ttf");
+}
+@font-face {
+    font-family: "Fell SC";
+    src: url("../../plugins/TossACoin/modgui/fonts/IMFeENsc28P.ttf");
 }
 
-/* A4 with a full-bleed first page: the cover supplies its own margins.   */
+/* Palette from the pedal: navy damask, gold coins, magenta panel. */
+:root {
+    --dark:   #0d1838;
+    --dark2:  #1a2b5c;
+    --accent: #e8b947;
+    --acc-d:  #9a6f12;
+    --plum:   #6e1d5a;
+    --ink:    #22232b;
+    --muted:  #5d606b;
+    --line:   #dedbd2;
+    --wash:   #f7f2e4;
+}
+
 @page        { size: A4; margin: 18mm 16mm; }
 @page :first { margin: 0; }
 
@@ -56,12 +45,13 @@ html, body {
 }
 
 h2 {
-    font-size: 17pt;
-    color: var(--acc-d);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-family: "Fell SC", Georgia, serif;
+    font-weight: 400;
+    font-size: 20pt;
+    color: var(--plum);
+    letter-spacing: 0.03em;
     border-bottom: 2px solid var(--accent);
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     margin: 0 0 10px 0;
     break-after: avoid;
 }
@@ -95,23 +85,18 @@ pre {
     break-inside: avoid;
 }
 
-/* Each <section> is a chapter and starts on a fresh page. Use .flow on a
-   section that should continue on the same page instead.                  */
 section { break-before: page; }
-section.flow { break-before: auto; margin-top: 22px; }
 .pb { break-before: page; }
 
-/* ---- cover ------------------------------------------------------------
-   Full-bleed dark page. Height is 296mm — 1mm SHY of A4 on purpose: at
-   exactly 297mm print rounding can spill a blank page 2.                  */
+/* ---- cover: 296mm, 1mm shy of A4, so print rounding can't spill a page 2 */
 .cover {
     width: 210mm;
     height: 296mm;
     background:
-        radial-gradient(ellipse at 30% 10%, rgba(217, 164, 65, 0.14), transparent 55%),
-        radial-gradient(ellipse at 85% 90%, rgba(168, 123, 40, 0.18), transparent 60%),
-        linear-gradient(160deg, var(--dark) 0%, var(--dark2) 60%, #1a1d21 100%);
-    color: #f0ede6;
+        radial-gradient(ellipse at 30% 12%, rgba(232, 185, 71, 0.16), transparent 55%),
+        radial-gradient(ellipse at 80% 92%, rgba(110, 29, 90, 0.55), transparent 60%),
+        linear-gradient(165deg, var(--dark2) 0%, var(--dark) 65%, #070d22 100%);
+    color: #f3ead2;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -120,60 +105,48 @@ section.flow { break-before: auto; margin-top: 22px; }
     padding: 20mm;
 }
 .cover .brand {
-    letter-spacing: 0.55em;
-    font-size: 10pt;
-    color: rgba(240, 237, 230, 0.6);
-    text-transform: uppercase;
-    margin-bottom: 4mm;
+    font-family: "Fell SC", Georgia, serif;
+    letter-spacing: 0.5em;
+    font-size: 11pt;
+    color: rgba(243, 234, 210, 0.65);
+    margin-bottom: 2mm;
 }
 .cover h1 {
-    font-size: 46pt;
-    letter-spacing: 0.28em;
-    margin: 0 0 3mm 0.28em;    /* left inset balances the letter-spacing tail */
-    color: #f7f4ee;
-    font-weight: 700;
+    font-family: "Unifraktur", serif;
+    font-weight: 400;
+    font-size: 64pt;
+    line-height: 1.1;
+    margin: 0 0 4mm 0;
+    color: var(--accent);
 }
 .cover .tagline {
     font-size: 13pt;
-    color: var(--accent);
-    letter-spacing: 0.06em;
+    color: #f3ead2;
+    letter-spacing: 0.03em;
     margin-bottom: 14mm;
 }
-.cover img, .cover .shot-placeholder {
-    width: 120mm;
+.cover img {
+    width: 150mm;
     border-radius: 4mm;
-    box-shadow: 0 6mm 18mm rgba(0, 0, 0, 0.55);
+    box-shadow: 0 6mm 18mm rgba(0, 0, 0, 0.6);
     margin-bottom: 16mm;
-}
-.cover .shot-placeholder {
-    height: 60mm;
-    border: 1px dashed rgba(240, 237, 230, 0.4);
-    box-shadow: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(240, 237, 230, 0.5);
-    font-size: 10pt;
 }
 .cover .subtitle {
     font-size: 12pt;
-    color: rgba(240, 237, 230, 0.9);
+    color: rgba(243, 234, 210, 0.9);
     margin-bottom: 2mm;
 }
 .cover .edition {
     font-size: 9.5pt;
-    color: rgba(240, 237, 230, 0.55);
+    color: rgba(243, 234, 210, 0.55);
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
 
-/* ---- pedal image with numbered callout badges --------------------------
-   Wrap the modgui screenshot in .pedal-map and drop absolutely-positioned
-   .pin badges over each control; the same numbers appear as .badge chips in
-   the control tables/cards below, so names map to positions at a glance.  */
+/* ---- screenshot with numbered pins; the same numbers are on the cards */
 .pedal-map {
     position: relative;
-    width: 118mm;
+    width: 150mm;
     margin: 4mm auto 6mm auto;
     break-inside: avoid;
 }
@@ -181,16 +154,16 @@ section.flow { break-before: auto; margin-top: 22px; }
     width: 100%;
     display: block;
     border-radius: 3mm;
-    box-shadow: 0 2mm 6mm rgba(34, 37, 42, 0.35);
+    box-shadow: 0 2mm 6mm rgba(13, 24, 56, 0.35);
 }
 .badge, .pedal-map .pin {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
-    background: var(--acc-d);
+    background: var(--plum);
     color: #fff;
     font-size: 7.5pt;
     font-weight: 700;
@@ -200,10 +173,8 @@ section.flow { break-before: auto; margin-top: 22px; }
 .pedal-map .pin {
     position: absolute;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
 }
-
-/* ---- control tables & knob cards ---- */
 
 table {
     border-collapse: collapse;
@@ -256,7 +227,31 @@ td.ctl { white-space: nowrap; font-weight: 700; }
 .knob li { margin-bottom: 1px; }
 .knob li b { color: var(--ink); font-weight: 600; }
 
-/* ---- tips / faq ---- */
+.recipe {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 5px;
+    padding: 8px 11px;
+    margin-bottom: 9px;
+    break-inside: avoid;
+}
+.recipe h3 { margin: 0 0 4px 0; color: var(--plum); }
+.recipe .set {
+    font-size: 8.8pt;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+.recipe .set b { color: var(--ink); font-weight: 600; }
+.recipe p { font-size: 9.3pt; margin: 0; }
+
+.tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+}
+.tip { break-inside: avoid; margin-bottom: 9px; }
+.tip h3 { margin: 0 0 2px 0; }
+.tip p  { font-size: 9.4pt; }
 
 dl.faq { margin: 6px 0; }
 dl.faq dt {
@@ -269,8 +264,6 @@ dl.faq dd {
     font-size: 9.4pt;
 }
 dl.faq .qa { break-inside: avoid; }
-
-/* ---- misc ---- */
 
 .note {
     background: var(--wash);
@@ -295,130 +288,283 @@ a { color: var(--acc-d); text-decoration: none; }
 </head>
 <body>
 
-<!-- ======================================================= page 1: cover
-  A real manual puts the modgui screenshot here, referenced by RELATIVE path
-  into the plugin source tree, e.g.:
-
-    <img src="../../plugins/TossACoin/modgui/screenshot-tossacoin.png"
-         alt="The Toss a Coin pedal">
-
-  That path only resolves when rendering from inside the repo — which is fine,
-  because the PDF is the shipped artifact, not the HTML. The template has no
-  screenshot yet, so this demo shows a placeholder box instead. Swap it for
-  the <img> as soon as your fork has one (modgui screenshots are REQUIRED for
-  MOD anyway — see INSTRUCTIONS.md).
--->
+<!-- ============================================================ cover -->
 <div class="cover">
-    <div class="brand">tossacoin</div>
-    <h1>TOSS A COIN</h1>
-    <div class="tagline">One knob. Exactly as loud as you want.</div>
-    <div class="shot-placeholder">pedal screenshot goes here</div>
-    <div class="subtitle">Gain utility for MOD Desktop and MOD Dwarf</div>
-    <div class="edition">User Manual &middot; July 2026 edition</div>
+    <div class="brand">STEFAN</div>
+    <h1>Toss a Coin</h1>
+    <div class="tagline">Every hard note drops a coin. Your pitch decides how it bounces.</div>
+    <img src="../../plugins/TossACoin/modgui/screenshot-tossacoin.png" alt="The Toss a Coin pedal">
+    <div class="subtitle">Pitch-to-rhythm pedal for MOD Desktop, MOD Dwarf and desktop DAWs</div>
+    <div class="edition">User Manual &middot; November 2026 edition</div>
 </div>
 
-<!-- ============================================ page 2: intro + quick start
-  "What it does" answers, in the reader's language, the only question that
-  matters: what will I hear? One plain-language sentence may gesture at HOW
-  it works; never more. Then Quick start: numbered steps from "drag it onto
-  the pedalboard" to "you are hearing the effect".
--->
+<!-- ========================================== what it does + quick start -->
 <section>
     <h2>What Toss a Coin does</h2>
     <p>
-        Toss a Coin is a <b>volume tool</b>. It takes your mono signal, adjusts its
-        level with a single <b>GAIN</b> knob — from a whisper 24&nbsp;dB quieter to a
-        roar 24&nbsp;dB louder — and sends it to both sides of a stereo output.
+        Imagine dropping a coin on a stone floor. The first bounce is high and slow,
+        then the bounces come faster and faster until the coin rattles to a stop.
+        Toss a Coin does that every time you <b>dig into a note</b>. Each bounce rings
+        like a small bell, and the bounces step up (or down) in pitch as they go.
     </p>
     <p>
-        Use it to balance one instrument against another, to push a quiet synth up
-        in front of a band, or as a clean boost anywhere in your chain.
+        The twist is that <b>the note you play sets the size of the coin.</b> Play a low
+        note and you drop a fat coin whose bounces start slow and take seconds to settle.
+        Play a high note and you drop a small coin that clatters away quickly. Your
+        melody turns into rhythm.
+    </p>
+    <p>
+        Soft playing passes through clean. Only hard attacks drop a coin, so you decide,
+        note by note, when the coins fall. Your dry sound is never changed: the coins
+        are added on top of it.
     </p>
     <div class="note">
-        <b>Good to know:</b> Toss a Coin is completely clean — it changes nothing
-        about your tone, only the level, at any knob setting.
+        <b>Good to know:</b> the coins listen to the pitch of a single note. Single notes
+        and double stops track best. A full chord still drops a coin, pitched to
+        whichever note the pedal hears most clearly.
     </div>
 
     <h2 style="margin-top:18px">Quick start</h2>
     <ol class="steps">
-        <li><b>Add Toss a Coin to your pedalboard.</b> In the MOD web interface, find it
-            under the brand <b>tossacoin</b> and drag it into your signal chain.</li>
-        <li><b>Play.</b> At the default (noon) the plugin passes your signal through
-            at exactly the level it came in.</li>
-        <li><b>Turn GAIN</b> right to boost, left to cut, until it sits where you
-            want it in the mix.</li>
+        <li><b>Add Toss a Coin to your pedalboard.</b> In the MOD web interface it's
+            under the brand <b>Stefan</b>. Put it early in the chain, before reverb and
+            delay.</li>
+        <li><b>Play a few soft notes.</b> You hear only your dry sound.</li>
+        <li><b>Now pick one low note hard.</b> A coin drops: a slow first bounce, then
+            faster and faster, climbing an octave as it goes.</li>
+        <li><b>Pick a high note hard.</b> Same coin, but smaller: it starts quicker and
+            settles sooner.</li>
+        <li><b>Not dropping? Or dropping on every note?</b> Turn SENSITIVITY up or down
+            until only the notes you dig into drop a coin.</li>
     </ol>
-
-    <!-- A real pedal manual would continue with <section> Recipes (named knob
-         settings + what to listen for) and Tips (the mistakes every first-time
-         user makes). A one-knob utility has nothing to say there; your plugin
-         probably does. -->
 </section>
 
-<!-- ================================================== page 3: the controls
-  Footswitches first (as a table), then one .knob card per knob. Every control
-  gets a numbered .badge that matches a .pin positioned over the screenshot in
-  a .pedal-map — with a real screenshot it looks like this:
-
-    <div class="pedal-map">
-        <img src="../../plugins/TossACoin/modgui/screenshot-tossacoin.png"
-             alt="Toss a Coin control layout">
-        <span class="pin" style="left:50%; top:30%;">1</span>
-    </div>
-
-  Describe each knob BY EAR at min / default / max — what the listener hears,
-  not what the parameter does ("very slow, bowed swells", not "attack 4 s").
--->
+<!-- ======================================================== the controls -->
 <section>
     <h2>The controls</h2>
+    <div class="pedal-map">
+        <img src="../../plugins/TossACoin/modgui/screenshot-tossacoin.png" alt="Toss a Coin control layout">
+        <span class="pin" style="left:6%;  top:30%;">1</span>
+        <span class="pin" style="left:22%; top:30%;">2</span>
+        <span class="pin" style="left:38%; top:30%;">3</span>
+        <span class="pin" style="left:54%; top:30%;">4</span>
+        <span class="pin" style="left:70%; top:30%;">5</span>
+        <span class="pin" style="left:86%; top:30%;">6</span>
+        <span class="pin" style="left:15%; top:72.7%;">7</span>
+        <span class="pin" style="left:15%; top:80.7%;">8</span>
+        <span class="pin" style="left:15%; top:88.5%;">9</span>
+    </div>
+    <p>The <b>silver coin</b> on the right is the on/off footswitch. Its eye glows red
+       while the pedal is on. When it's off your signal passes straight through and the
+       coins go silent.</p>
 
+    <h3>Knobs</h3>
     <div class="knob-grid">
         <div class="knob">
-            <h4><span class="badge">1</span> GAIN</h4>
-            <p>How loud the output is compared to the input.</p>
+            <h4><span class="badge">1</span> SENSITIVITY</h4>
+            <p>How hard you have to hit a note to drop a coin.</p>
             <ul>
-                <li><b>Left (&minus;24&nbsp;dB):</b> a distant whisper</li>
-                <li><b>Noon (0&nbsp;dB, default):</b> exactly as loud as what comes in</li>
-                <li><b>Right (+24&nbsp;dB):</b> a big, clean boost</li>
+                <li><b>Low:</b> only your hardest digs drop a coin</li>
+                <li><b>Middle (default):</b> firm picking drops one, soft playing doesn't</li>
+                <li><b>High:</b> almost every note drops one</li>
+            </ul>
+        </div>
+        <div class="knob">
+            <h4><span class="badge">2</span> BOUNCE</h4>
+            <p>How lively the coin is: how much each bounce keeps of the one before.</p>
+            <ul>
+                <li><b>Low (70&nbsp;%):</b> a dead coin, a dozen quick hops and done</li>
+                <li><b>Default (92&nbsp;%):</b> a real coin, around fifty bounces that
+                    gather into a rattle over several seconds on a low note</li>
+                <li><b>High (97&nbsp;%):</b> a coin that won't stop, a long roll that
+                    takes many seconds to settle</li>
+            </ul>
+        </div>
+        <div class="knob">
+            <h4><span class="badge">3</span> HEIGHT</h4>
+            <p>How high the coin is dropped from: the wait before the first bounce. Higher
+               notes always start quicker than lower ones.</p>
+            <ul>
+                <li><b>Low (0.1&nbsp;s):</b> dropped from a tabletop, a tight, fast rattle</li>
+                <li><b>Default (0.5&nbsp;s):</b> on a low E the first bounce comes half a
+                    second later</li>
+                <li><b>High (1.5&nbsp;s):</b> tossed in the air, a long hang before the
+                    first bounce</li>
+            </ul>
+        </div>
+        <div class="knob">
+            <h4><span class="badge">4</span> PITCH</h4>
+            <p>How far the bounces travel in pitch over one drop, and which way.</p>
+            <ul>
+                <li><b>Fully left (&minus;24):</b> the bounces fall two octaves</li>
+                <li><b>Noon (0):</b> every bounce rings the same note</li>
+                <li><b>Default (+12):</b> the bounces climb an octave</li>
+                <li><b>Fully right (+24):</b> they climb two octaves</li>
+            </ul>
+        </div>
+        <div class="knob">
+            <h4><span class="badge">5</span> GLITCH</h4>
+            <p>The chance that a bounce jumps to a random note. Some jumps snap back on the
+               next bounce; others carry on from the new note.</p>
+            <ul>
+                <li><b>Off (default):</b> a well-behaved coin</li>
+                <li><b>Around 30&ndash;40&nbsp;%:</b> a few odd hops per drop</li>
+                <li><b>Full:</b> every bounce lands somewhere unexpected</li>
+            </ul>
+        </div>
+        <div class="knob">
+            <h4><span class="badge">6</span> LEVEL</h4>
+            <p>How loud the coins are. Your dry signal always stays at its own level.</p>
+            <ul>
+                <li><b>Fully left (&minus;24&nbsp;dB):</b> faint sparkle behind the note</li>
+                <li><b>Default (0&nbsp;dB):</b> coins about as loud as the attack that
+                    dropped them</li>
+                <li><b>Fully right (+6&nbsp;dB):</b> coins in front</li>
             </ul>
         </div>
     </div>
 
+    <h3 class="pb" style="margin-top:0">Selectors</h3>
+    <p>The three rows on the purple panel. Click a word to pick it; the dot underneath
+       shows the current choice.</p>
+    <table>
+        <tr><th style="width:22%">Selector</th><th>What it does</th></tr>
+        <tr>
+            <td class="ctl"><span class="badge">7</span> STEPS</td>
+            <td>Which notes the bounces are allowed to land on, counted from the note you
+                played. There's no key setting; the steps always follow your note.
+                <br><b>Glide:</b> a smooth slide, like a whistle.
+                <br><b>Semitones (default):</b> a chromatic run, one half step at a time.
+                <br><b>Fifths:</b> fifths and octaves only, bright bugle-like leaps.
+                <br><b>Octaves:</b> octave jumps only, the plainest and most consonant.</td>
+        </tr>
+        <tr>
+            <td class="ctl"><span class="badge">8</span> SOUND</td>
+            <td><b>Synth (default):</b> a small tuned metal plate, ringing two octaves
+                above your note with a bell-like tail. The rings overlap, so a fast rattle
+                blooms into a shimmering cluster.
+                <br><b>Sampled:</b> your own pick attack, chopped and replayed for every
+                bounce, getting higher and shorter as the pitch climbs. It sounds like
+                your instrument stuttering.</td>
+        </tr>
+        <tr>
+            <td class="ctl"><span class="badge">9</span> REVERSE</td>
+            <td><b>Off (default):</b> slow first, then faster, like a falling coin.
+                <br><b>On:</b> the drop plays backwards: it starts in a fast, loud flurry
+                and slows down as it fades out, like a coin spinning up off the floor.</td>
+        </tr>
+    </table>
+
     <div class="note">
-        <b>Stereo out of a mono pedal?</b> Toss a Coin sends the same signal to left
-        and right, so it slots cleanly in front of stereo effects like reverb,
-        delay, or chorus.
+        <b>How hard you hit matters twice:</b> it decides <i>whether</i> a coin drops
+        (SENSITIVITY) and <i>how loud</i> it is. A firm attack drops a quieter coin than
+        a hard dig.
     </div>
 </section>
 
-<!-- ============================================= page 4: installing + Q&A
-  Installation covers exactly two audiences: MOD Desktop users (unzip into the
-  user-plugin folder) and Dwarf users (copy onto the unit). Point at the
-  GitHub release assets — the PDF they are reading was attached to the same
-  release as the tarballs. Keep the developer route ("build from source") to
-  a one-line pointer at the repo.
--->
+<!-- ========================================================= recipes + tips -->
+<section style="break-before:auto; margin-top:22px">
+    <h2>Recipes</h2>
+    <p>Start from the default settings and change only what's listed.</p>
+
+    <div class="recipe">
+        <h3>Penny drop</h3>
+        <div class="set">the defaults</div>
+        <p>Play a slow melody and dig into the first note of each phrase. Every phrase
+           drops a coin that climbs an octave as it settles: low notes leave long,
+           lazy rattles behind, high notes quick little ones.</p>
+    </div>
+    <div class="recipe">
+        <h3>Gold rush</h3>
+        <div class="set"><b>STEPS</b> Fifths &middot; <b>PITCH</b> +19</div>
+        <p>The bounces leap in fifths and octaves, an octave and a fifth over the whole
+           drop. Arpeggiated fanfares fall out of every hard note. Great on open
+           strings.</p>
+    </div>
+    <div class="recipe">
+        <h3>Cursed coin</h3>
+        <div class="set"><b>GLITCH</b> 40&nbsp;% &middot; <b>STEPS</b> Semitones</div>
+        <p>Most bounces behave, then one leaps off to a strange note, and sometimes the
+           rest of the drop follows it there. Every drop comes out different.</p>
+    </div>
+    <div class="recipe">
+        <h3>Rewind</h3>
+        <div class="set"><b>REVERSE</b> On &middot; <b>PITCH</b> &minus;12</div>
+        <p>A fast, bright flurry right on the attack, which slows and sinks an octave as
+           it fades. It sounds like tape spinning down behind each note.</p>
+    </div>
+    <div class="recipe">
+        <h3>Pickpocket</h3>
+        <div class="set"><b>SOUND</b> Sampled &middot; <b>STEPS</b> Octaves &middot;
+             <b>BOUNCE</b> 85&nbsp;%</div>
+        <p>Your own attack chirps back at you, jumping up in octaves and getting shorter
+           and shorter. Short, percussive notes work best.</p>
+    </div>
+    <div class="recipe">
+        <h3>Purse spill</h3>
+        <div class="set"><b>HEIGHT</b> 0.2&nbsp;s &middot; <b>BOUNCE</b> 80&nbsp;% &middot;
+             <b>SENSITIVITY</b> high &middot; <b>LEVEL</b> &minus;6&nbsp;dB</div>
+        <p>Short, quiet coins on nearly every note. Fast strumming turns into a
+           glittering, rhythmic sparkle under the chords.</p>
+    </div>
+
+    <h2 style="margin-top:16px">Tips</h2>
+    <div class="tips-grid">
+    <div class="tip">
+        <h3>Play soft, hit hard</h3>
+        <p>The pedal works best when you play dynamically. Set SENSITIVITY so your normal
+           playing stays clean, then dig in on the notes you want to "pay".</p>
+    </div>
+    <div class="tip">
+        <h3>Single notes track best</h3>
+        <p>The coins follow one pitch. Play single notes or let one note ring above the
+           rest when you want the coin's size to follow your melody.</p>
+    </div>
+    <div class="tip">
+        <h3>Six coins at once</h3>
+        <p>Up to six drops bounce at the same time. A seventh hard note takes over the
+           oldest one, which is usually the one that has nearly stopped anyway.</p>
+    </div>
+    <div class="tip">
+        <h3>Reverb loves coins</h3>
+        <p>Put a reverb or delay after Toss a Coin. The stereo output feeds stereo
+           effects directly, and the bell rings bloom in a room.</p>
+    </div>
+    <div class="tip">
+        <h3>Low notes, long drops</h3>
+        <p>With BOUNCE high, a low note can keep bouncing for several seconds. Turn BOUNCE
+           or HEIGHT down if the drops pile up faster than they settle.</p>
+    </div>
+    <div class="tip">
+        <h3>A muted scratch reuses the last note</h3>
+        <p>If the pedal can't hear a pitch, like a muted chop or a pick scrape, the coin
+           takes the pitch of the last clear note you played.</p>
+    </div>
+    </div>
+</section>
+
+<!-- ================================================ install, Q&A, specs -->
 <section>
     <h2>Installing Toss a Coin</h2>
     <p>
-        Download the build for your platform from the plugin's
-        <b>GitHub Releases</b> page — each release ships a MOD&nbsp;Desktop bundle
-        (<code>tossacoin-vX.Y.Z-linux-x86_64.tar.gz</code>) and a MOD&nbsp;Dwarf bundle
-        (<code>tossacoin-vX.Y.Z-dwarf-aarch64.tar.gz</code>).
+        Download the build for your platform from the
+        <b>Releases page</b> at <a href="https://github.com/stefdoerr/tossacoin/releases">github.com/stefdoerr/tossacoin/releases</a>.
+        Replace <code>X.Y.Z</code> below with the version you downloaded.
     </p>
 
     <h3>MOD Desktop (Linux)</h3>
     <ol class="steps">
-        <li>Extract the archive: <code>tar xzf tossacoin-vX.Y.Z-linux-x86_64.tar.gz</code></li>
+        <li>Extract the archive: <code>tar xf tossacoin-vX.Y.Z-linux-amd64.tar.gz</code></li>
         <li>Move the extracted <code>tossacoin.lv2</code> folder into
             <code>~/Documents/MOD Desktop/lv2/</code></li>
-        <li>Restart MOD Desktop. Toss a Coin appears in the plugin library under
-            the brand <b>tossacoin</b>.</li>
+        <li>Restart MOD Desktop. Toss a Coin appears in the plugin library under the
+            brand <b>Stefan</b>.</li>
     </ol>
 
     <h3>MOD Dwarf</h3>
     <ol class="steps">
-        <li>Connect the Dwarf over USB and extract the Dwarf archive on your computer.</li>
+        <li>Connect the Dwarf over USB and extract
+            <code>tossacoin-vX.Y.Z-dwarf-aarch64.tar.gz</code> on your computer.</li>
         <li>Copy the bundle onto the unit:
             <pre>scp -O -r tossacoin.lv2 root@192.168.51.1:/root/.lv2/</pre></li>
         <li>Restart the audio services (or simply reboot the Dwarf):
@@ -427,35 +573,74 @@ a { color: var(--acc-d); text-decoration: none; }
             (<b>Ctrl-Shift-R</b>) and drag Toss a Coin onto a pedalboard.</li>
     </ol>
 
+    <h3>Desktop DAWs (VST3 / CLAP)</h3>
+    <p>Linux, Windows and macOS builds are on the same Releases page. Put the plugin in
+       your system's VST3 or CLAP folder and rescan plugins in your DAW. The macOS
+       installer is unsigned: right-click it and choose Open.</p>
+
     <h2 class="pb" style="margin-top:0">Questions &amp; answers</h2>
     <dl class="faq">
         <div class="qa">
-            <dt>I hear nothing after installing.</dt>
-            <dd>Make sure the pedal is connected on the pedalboard — the input jack on
-                its left, both output jacks on its right — and that GAIN is not fully
-                left. On the Dwarf, restart <code>jack2</code> and <code>mod-ui</code>
-                (or reboot) after copying the bundle.</dd>
+            <dt>No coins drop, whatever I play.</dt>
+            <dd>Turn SENSITIVITY up and check LEVEL isn't fully left. A quiet input
+                (a low-output pickup, or a pedal before it that turns the volume down)
+                needs more sensitivity.</dd>
         </div>
         <div class="qa">
-            <dt>Does the boost distort?</dt>
-            <dd>Toss a Coin itself stays clean at any setting, but a big boost can push
-                the <i>next</i> pedal — or the output stage — into clipping. If you hear
-                crackling, back GAIN off or lower the level further down the chain.</dd>
+            <dt>Coins drop on every note.</dt>
+            <dd>Turn SENSITIVITY down until soft notes pass clean. A compressor before Toss
+                a Coin flattens your dynamics, so try moving it after.</dd>
+        </div>
+        <div class="qa">
+            <dt>A held note doesn't keep dropping coins. Is that right?</dt>
+            <dd>Yes. Only the attack drops a coin. A note that keeps ringing, swells in or
+                is sustained by a pedal never drops a second one.</dd>
+        </div>
+        <div class="qa">
+            <dt>The coins are pitched wrong on chords.</dt>
+            <dd>The pedal hears one pitch at a time, so on a chord it picks one note,
+                often the lowest or loudest. That's expected. Pick single notes when the
+                pitch matters.</dd>
+        </div>
+        <div class="qa">
+            <dt>Does it work with bass?</dt>
+            <dd>Yes. It follows pitches from about 40&nbsp;Hz, below a bass guitar's low E.
+                Low notes make big, slow coins, so you may want HEIGHT lower.</dd>
+        </div>
+        <div class="qa">
+            <dt>Is there a delay before the coins?</dt>
+            <dd>The first bounce waits until the pedal has heard your note's pitch, at most
+                a few hundredths of a second on the lowest notes. Your dry note covers it,
+                and it's never delayed itself.</dd>
+        </div>
+        <div class="qa">
+            <dt>I hear nothing at all after installing.</dt>
+            <dd>Check the pedal is connected on the pedalboard: the input jack on its
+                left, both output jacks on its right. On the Dwarf, restart
+                <code>jack2</code> and <code>mod-ui</code> (or reboot) after copying the
+                bundle.</dd>
         </div>
     </dl>
 
     <h2 style="margin-top:16px">Specifications</h2>
     <table>
-        <tr><th style="width:34%">Format</th><td>LV2 audio plugin, mono in &rarr; stereo out</td></tr>
-        <tr><th>Platforms</th><td>MOD Desktop (Linux x86_64), MOD Dwarf (aarch64)</td></tr>
-        <tr><th>Controls</th><td>Gain: &minus;24&nbsp;dB &hellip; +24&nbsp;dB, default 0&nbsp;dB</td></tr>
-        <tr><th>Latency</th><td>None</td></tr>
+        <tr><th style="width:30%">Formats</th><td>LV2 (MOD Desktop, MOD Dwarf, Raspberry Pi), VST3 and CLAP (Linux, Windows, macOS)</td></tr>
+        <tr><th>Audio</th><td>Mono in, stereo out (the same signal on both sides)</td></tr>
+        <tr><th>Dry signal</th><td>Always passes through unchanged; coins are added on top</td></tr>
+        <tr><th>Pitch range</th><td>About 40&nbsp;Hz to 1.5&nbsp;kHz</td></tr>
+        <tr><th>Coins at once</th><td>Up to six drops; a new one replaces the oldest</td></tr>
+        <tr><th>Controls</th><td>Sensitivity, Bounce (70&ndash;97&nbsp;%), Height (0.1&ndash;1.5&nbsp;s),
+            Pitch (&minus;24&hellip;+24 semitones), Glitch (0&ndash;100&nbsp;%),
+            Level (&minus;24&hellip;+6&nbsp;dB), Steps, Sound, Reverse, on/off</td></tr>
+        <tr><th>Latency</th><td>None on the dry signal</td></tr>
     </table>
 
     <p class="credits">
-        Toss a Coin is free software built with the DISTRHO Plugin Framework.
-        Manual edition July 2026 — for the plugin version it shipped with;
-        see the GitHub release page for the latest.
+        Toss a Coin is free software by Stefan, built with the DISTRHO Plugin Framework.
+        Source and releases: github.com/stefdoerr/tossacoin. The pedal artwork uses
+        public-domain and CC0 images from The Metropolitan Museum of Art and Wikimedia
+        Commons, and the UnifrakturMaguntia and IM Fell English SC fonts (SIL Open Font
+        License). November 2026 edition.
     </p>
 </section>
 

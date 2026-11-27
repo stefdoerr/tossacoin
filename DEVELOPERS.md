@@ -1,20 +1,20 @@
-# MOD Plugin Template — build & release reference
+# Toss a Coin — developer guide
 
-Everything for building, cross-compiling, testing, and publishing a plugin made from
-this template. New here? Start with the [README](README.md#quick-start), then rename
-the template to your plugin.
+Building from source, cross-compiling for the MOD Dwarf, testing, and the release /
+publishing workflow. **Using Toss a Coin needs none of this**: see the
+[README](README.md#install) to download a prebuilt bundle.
 
 ## Build targets
 
 | Command                       | What it does |
 |-------------------------------|--------------|
-| `make`                        | Build `bin/myplugin.{lv2,vst3,clap}` (host toolchain) |
-| `make beta`                   | Build `bin/myplugin-beta.lv2` (side-by-side variant) |
+| `make`                        | Build `bin/tossacoin.{lv2,vst3,clap}` (host toolchain) |
+| `make beta`                   | Build `bin/tossacoin-beta.lv2` (side-by-side variant) |
 | `./install.sh`                | Copy to MOD Desktop's user-plugin dir |
 | `BETA=1 ./install.sh`         | Install the beta variant |
 | `make install`                | Copy to `/usr/lib/lv2/` (use `sudo`) |
 | `make dwarf-image`            | One-time: build aarch64 cross-toolchain image (~30-60 min) |
-| `make dwarf-build`            | Cross-compile → `build/dwarf/myplugin.lv2` (~10 s) |
+| `make dwarf-build`            | Cross-compile → `build/dwarf/tossacoin.lv2` (~10 s) |
 | `make dwarf-deploy`           | scp the bundle to a connected Dwarf + restart services |
 | `make dwarf`                  | Cross-build + deploy in one step |
 | `make test`                   | Build + run the DSP regression tests in `tests/` under ASAN |
@@ -36,7 +36,7 @@ GitHub Actions on each `v*` tag, not by `make` — see below.
 
 ## Publishing to Patchstorage
 
-This template also wires up publishing to [patchstorage.com](https://patchstorage.com)'s
+The Makefile also publishes to [patchstorage.com](https://patchstorage.com)'s
 LV2-plugins platform (`linux-amd64`, `rpi-aarch64`, and `patchbox-os-arm32` targets):
 
 - `make patchstorage-build` — cross-build all three bundles
@@ -44,22 +44,22 @@ LV2-plugins platform (`linux-amd64`, `rpi-aarch64`, and `patchbox-os-arm32` targ
 - `make patchstorage PS_USER=<username>` — build, prepare, and push (password prompted
   interactively)
 
-Fill in `patchstorage.json` at the repo root (`source_code_url` / `donate_url`)
-when you fork the template. See
+Per-plugin metadata lives in `patchstorage.json` at the repo root. See
 [`patchstorage-build/README.md`](patchstorage-build/README.md) for prerequisites and details.
 
 ## Project layout
 
 ```
 .
-├── plugins/MyPlugin/             — the DPF plugin (C++ DSP + modgui)
-│   ├── MyPluginPlugin.cpp        — DSP code; replace with your plugin
+├── plugins/TossACoin/            — the DPF plugin (C++ DSP + modgui)
+│   ├── dsp/                      — onset, pitch detector, schedule, coin synth, grains, engine
+│   ├── TossACoinPlugin.cpp       — plugin glue: parameters, bypass, mixing
 │   ├── DistrhoPluginInfo.h       — LV2 identity (stable + beta)
 │   ├── modgui/                   — MOD pedalboard GUI (HTML/CSS/JS/sprite)
 │   ├── modgui.ttl                — MOD GUI declaration
 │   └── Makefile                  — DPF inner build glue (BETA=1 retags here)
-├── docs/manual/                  — beginner PDF manual (annotated demo; HTML source + generated PDF)
-├── tests/                        — host-less DSP regression tests (annotated demo; `make test`)
+├── docs/manual/                  — beginner PDF manual (HTML source + generated PDF)
+├── tests/                        — host-less DSP regression tests (`make test`)
 ├── dpf/                          — DISTRHO Plugin Framework (git submodule)
 ├── mod-build/                    — Self-contained Dwarf cross-build setup
 │   ├── Dockerfile                — vendored MPB Dockerfile, builds aarch64 toolchain
@@ -73,7 +73,7 @@ when you fork the template. See
 ├── patchstorage.json             — per-plugin metadata (source_code_url, donate_url)
 ├── Makefile                      — top-level build + install + Dwarf + release
 ├── install.sh                    — MOD Desktop installer
-├── README.md                     — the forker's entry point
+├── README.md                     — user-facing overview
 └── INSTRUCTIONS.md               — instructions for an LLM continuing this work
 ```
 
