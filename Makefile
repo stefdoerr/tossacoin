@@ -431,11 +431,12 @@ release:
 		echo "error: tag v$(version) already exists locally."; \
 		exit 1; \
 	fi
-	@if [ "$$(cat VERSION)" != "$(version)" ]; then \
-		echo "==> Bumping VERSION $$(cat VERSION) -> $(version)"; \
-		printf '%s\n' "$(version)" > VERSION; \
-		git add VERSION; \
-		git commit -m "Bump version to $(version)"; \
+	@# The tree is clean (checked above), so commit -a takes only these two files.
+	@printf '%s\n' "$(version)" > VERSION
+	@sed -i 's/^$(PLUGIN_UPPER)_VERSION = .*/$(PLUGIN_UPPER)_VERSION = v$(version)/' mod-build/$(PLUGIN).mk
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "==> Bumping version to $(version) (VERSION, mod-build/$(PLUGIN).mk)"; \
+		git commit -am "Bump version to $(version)"; \
 	fi
 	$(MAKE) release-build version=$(version)
 	@echo "==> Pushing branch (so the tagged commit is reachable on origin)"
@@ -455,5 +456,8 @@ release:
 	@echo
 	@echo "Release published:"
 	@echo "  https://github.com/$$(git config --get remote.origin.url | sed -E 's|.*[:/]([^:/]+/[^/]+?)(\.git)?$$|\1|')/releases/tag/v$(version)"
+	@echo
+	@echo "Next: upload mod-build/$(PLUGIN).mk at https://builder.mod.audio/buildroot"
+	@echo "      (tick 'shareable, persistent build') and put the new share link in README.md."
 
 .PHONY: release release-build

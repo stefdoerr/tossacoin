@@ -44,6 +44,10 @@ pitch the detector locks onto, and it tracks from about 40 Hz, so bass works too
 
 ## Install
 
+**MOD Dwarf, Duo and Duo X: install from the browser.** Connect the unit to your computer
+over USB and open **[builder.mod.audio/install/y9p2z43f](http://builder.mod.audio/install/y9p2z43f)** (v0.1.0). The page installs
+the build for your unit. Chrome and Edge ask to access devices on your local network: allow it.
+
 Every release ships ready-to-run bundles. Get the one for your platform from the
 **[Releases page](../../releases/latest)**. Replace `X.Y.Z` below with the version you
 downloaded. The plugin appears under brand **Stefan** as **Toss a Coin**.
