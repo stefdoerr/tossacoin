@@ -35,7 +35,7 @@ jobs:
           # Windows — cross-compiled from Linux (MinGW); no Windows runner needed.
           - { target: win64,           os: ubuntu-24.04 }
           # macOS — universal (arm64 + x86_64) on an Apple-Silicon runner.
-          - { target: macos-universal, os: macos-14 }
+          - { target: macos-universal, os: macos-latest }
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     steps:
